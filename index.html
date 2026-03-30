@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magische Farben</title>
+    <style>
+        /* Setzt die Ränder zurück und sorgt dafür, dass die Seite den ganzen Bildschirm ausfüllt */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Der magische Hintergrund */
+        .color-background {
+            width: 100vw;
+            height: 100vh;
+            /* Ein sanfter, mehrfarbiger Farbverlauf */
+            background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #ffb199, #ff0844);
+            /* Die Größe wird stark vergrößert, damit wir sie animieren können */
+            background-size: 400% 400%;
+            /* Verknüpfung mit der Animation unten */
+            animation: gradientChange 12s ease infinite;
+        }
+
+        /* Die Animation, die den Hintergrund bewegt */
+        @keyframes gradientChange {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="color-background"></div>
+
+</body>
+</html>
