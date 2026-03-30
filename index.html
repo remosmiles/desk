@@ -3,46 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magische Farben</title>
+    <title>Hypnotisches Farblichtspiel</title>
     <style>
-        /* Setzt die Ränder zurück und sorgt dafür, dass die Seite den ganzen Bildschirm ausfüllt */
+        /* Grundlegendes Setup, damit die Seite den ganzen Bildschirm füllt */
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden;
+            overflow: hidden; /* Verhindert Scrollbalken */
+            background-color: #000; /* Tiefschwarzer Hintergrund für maximalen Kontrast */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* Der magische Hintergrund */
-        .color-background {
-            width: 100vw;
-            height: 100vh;
-            /* Ein sanfter, mehrfarbiger Farbverlauf */
-            background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #ffb199, #ff0844);
-            /* Die Größe wird stark vergrößert, damit wir sie animieren können */
-            background-size: 400% 400%;
-            /* Verknüpfung mit der Animation unten */
-            animation: gradientChange 12s ease infinite;
+        /* Die Leinwand, auf der wir zeichnen */
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
 
-        /* Die Animation, die den Hintergrund bewegt */
-        @keyframes gradientChange {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
-            }
+        /* Ein kleiner, optionaler Hinweis-Text */
+        .overlay-text {
+            position: absolute;
+            pointer-events: none; /* Text reagiert nicht auf die Maus */
+            font-size: 1.2rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+            opacity: 0.6;
+            animation: fadeInOut 4s infinite ease-in-out;
+            z-index: 10;
+            text-align: center;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.7; }
         }
     </style>
 </head>
 <body>
 
-    <div class="color-background"></div>
+    <canvas id="particleCanvas"></canvas>
 
+    <div class="overlay-text">Bewege deine Maus...</div>
+
+    <script>
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Größe der Leinwand an das Fenster anpassen
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particlesArray = [];
+        let numberOfParticles = (canvas.width * canvas.height) / 5000; // Dichte anpassen
+        let hue = 0; // Der Start-Farbwert
+
+        // Partikel-Klasse
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 1; // Größe der Punkte
+                this.speedX = Math.random() * 3 - 1.5; // Geschwindigkeit X
+                this.speedY = Math.random() * 3 - 1.5; // Geschwindigkeit Y
+                this.color = 'hsl(' + hue + ', 100%, 50%)'; // Farbe (HSL für Farbverlauf)
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                // Abprallen an den Rändern
+                if (this.x > canvas.width || this.x < 0) this.speedX = -this.speedX;
+                if (this.y > canvas.height || this.y < 0) this.speedY = -this.speedY;
+
+                this.color = 'hsl(' + hue + ', 100%, 50%)'; // Farbe aktualisieren
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Partikel-Array initialisieren
+        function init() {
+            for (let i = 0; i < numberOfParticles; i++) {
+                particlesArray.push(new Particle());
+            }
+        }
+
+        // Die Linien zwischen den Partikeln zeichnen
+        function connectParticles() {
+            let opacityValue = 1;
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x))
+                        + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                    
+                    // Nur Linien zeichnen, wenn die Punkte nah genug sind
+                    if (distance < (canvas.width / 7) * (canvas.height / 7)) {
+                        opacityValue = 1 - (distance / 20000); // Transparenz basierend auf Entfernung
+                        ctx.strokeStyle = 'hsla(' + hue + ', 100%, 50%,' + opacityValue + ')';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        // Die Animationsschleife
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Bildschirm leeren
+            // ctx.fillStyle = 'rgba(0,0,0,0.05)'; // Alternativ: Ein "Schweif"-Effekt
+            // ctx.fillRect(0,0, canvas.width, canvas.height);
+
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+                particlesArray[i].draw();
+            }
+            connectParticles();
+            hue += 0.5; // Die Farbe im Kreis drehen (HSL)
+            requestAnimationFrame(animate);
+        }
+
+        // Interaktivität: Mausbewegung
+        window.addEventListener('mousemove', function(event) {
+            // Ein "Magnet"-Effekt: Die Partikel in der Nähe der Maus bewegen sich
+            for (let i = 0; i < particlesArray.length; i++) {
+                let dx = event.x - particlesArray[i].x;
+                let dy = event.y - particlesArray[i].y;
+                let distance = Math.sqrt(dx*dx + dy*dy);
+                if (distance < 150) {
+                    particlesArray[i].speedX += dx * 0.01;
+                    particlesArray[i].speedY += dy * 0.01;
+                }
+            }
+        });
+
+        // Fenstergröße anpassen
+        window.addEventListener('resize', function() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            numberOfParticles = (canvas.width * canvas.height) / 5000;
+            particlesArray = [];
+            init();
+        });
+
+        // Starten
+        init();
+        animate();
+    </script>
 </body>
 </html>
